@@ -1,0 +1,22 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      target: dev
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run dev
+    environment:
+      NODE_ENV: development
+    # expose debugger if needed
+    ports:
+      - "9229:9229"
+
+  frontend:
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm start
+    environment:
+      NODE_ENV: development
