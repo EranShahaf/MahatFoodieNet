@@ -16,7 +16,7 @@ app.use(cors());
 // Swagger configuration
 const swaggerOptions = {
   definition: {
-    openapi: "3.0.0",
+    openapi: "3.1.1",
     info: {
       title: "Backend API",
       version: "1.0.0",
@@ -25,7 +25,7 @@ const swaggerOptions = {
     servers: [
       {
         url: `http://localhost:${PORT}`,
-        description: "Development server",
+        description: "server",
       },
     ],
   },
