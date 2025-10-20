@@ -1,3 +1,19 @@
+version: "3.9"
+
+x-db-env: &db-env
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: admin123
+  POSTGRES_DB: mydb
+
+x-s3-env: &s3-env
+  MINIO_ROOT_USER: minioadmin
+  MINIO_ROOT_PASSWORD: minioadmin123
+  MINIO_ENDPOINT: localhost
+  MINIO_PORT: 9000
+  MINIO_USE_SSL: false
+  MINIO_ACCESS_KEY: minioadmin
+  MINIO_SECRET_KEY: minioadmin123
+
 services:
   minio:
     image: minio/minio:latest
@@ -6,8 +22,7 @@ services:
       - "9000:9000"   # API
       - "9001:9001"   # Console
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
+      <<: *s3-env
     command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
@@ -18,11 +33,10 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin123
-      POSTGRES_DB: mydb
+      <<: *db-env
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./backend/scripts/db/:/docker-entrypoint-initdb.d/:ro
 
   backend:
     build:
@@ -33,13 +47,27 @@ services:
     ports:
       - "5000:5000"
     environment:
-      DATABASE_URL: postgres://admin:admin123@postgres:5432/mydb
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin123
+      <<: [*db-env, *s3-env]
+      JWT_SECRET: super_secret_foodienet
+      JWT_EXPIRE_IN: 1h
     depends_on:
       - postgres
       - minio
+  
+  init-users:
+    build:
+      context: ./backend
+    command: >
+      bash -c "
+      echo '⏳ Waiting for backend...' &&
+      until curl -s http://backend:5000/api/hello > /dev/null; do sleep 2; done &&
+      echo '🚀 Backend is up, running init script...' &&
+      node scripts/initUsers.js
+      "
+    depends_on:
+      - backend
+    environment:
+      API_URL: http://backend:5000
 
   frontend:
     build:
