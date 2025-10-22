@@ -14,7 +14,7 @@ export const userService = {
         // Create MinIO bucket for this user
         // Bucket name can be "user-{id}" or "username" depending on your convention
         const bucketName = `user-${user.id}`;
-        // await createBucketForUser(bucketName);
+        await createBucketForUser(bucketName);
     
         return { ...user, bucket: bucketName };
       },

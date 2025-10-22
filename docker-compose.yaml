@@ -8,7 +8,7 @@ x-db-env: &db-env
 x-s3-env: &s3-env
   MINIO_ROOT_USER: minioadmin
   MINIO_ROOT_PASSWORD: minioadmin123
-  MINIO_ENDPOINT: localhost
+  MINIO_ENDPOINT: minio
   MINIO_PORT: 9000
   MINIO_USE_SSL: false
   MINIO_ACCESS_KEY: minioadmin
