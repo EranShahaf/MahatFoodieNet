@@ -6,8 +6,10 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { authRouter } from "./controllers/auth.controller.js";
 import { userRouter } from "./controllers/user.controller.js";
+import { postRouter } from "./controllers/post.controller.js";
+import { commentRouter } from "./controllers/comment.controller.js";
+import { likeRouter } from "./controllers/like.controller.js";
 import { auditMiddleware } from "./middlewares/audit.js";
-
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -63,6 +65,9 @@ app.use(auditMiddleware);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 app.use("/api", authRouter);
 app.use("/api/users", userRouter);
+app.use("/api/posts", postRouter);
+app.use("/api/comments", commentRouter);
+app.use("/api/likes", likeRouter);
 
 app.listen(PORT, () => {
   console.log(`✅ Backend running on port ${PORT}`);
