@@ -22,9 +22,19 @@ export class PostRepository {
 
   async findAll() {
     try {
-      const res = await pool.query(`SELECT * FROM posts`);
+      const res = await pool.query(`
+        SELECT p.*, u.username
+        FROM posts p
+        LEFT JOIN users u ON p.user_id = u.id
+        ORDER BY p.created_at DESC
+      `);
       console.log(`[DB] ${new Date().toISOString()} | Found ${res.rows.length} posts`);
-      return res.rows.map(row => new Post(row));
+      return res.rows.map(row => {
+        const post = new Post(row);
+        // Add username to the post object for API responses
+        post.username = row.username;
+        return post;
+      });
     } catch (error) {
       console.error(`[DB ERROR] ${new Date().toISOString()} | Failed to find all posts: ${error.message}`);
       throw error;

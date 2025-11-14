@@ -78,10 +78,17 @@ export const postService = {
       let image_path = null;
       if (image) {
         console.log(`[SERVICE] ${new Date().toISOString()} | Processing image for post: "${title}"`);
-        // Assume image upload returns a MinIO object key or presigned URL
-        const uploaded = await getMinioFilePath(user.username, image);
-        image_path = uploaded;
-        console.log(`[SERVICE] ${new Date().toISOString()} | Image path generated: ${image_path}`);
+        // Check if image is already a full URL (from initFullFlow or other direct uploads)
+        if (image.startsWith('http://') || image.startsWith('https://')) {
+          // Already a full URL, use it directly
+          image_path = image;
+          console.log(`[SERVICE] ${new Date().toISOString()} | Image is already a full URL: ${image_path}`);
+        } else {
+          // Assume image is an object name/path, generate the full URL
+          const uploaded = await getMinioFilePath(user.username, image);
+          image_path = uploaded;
+          console.log(`[SERVICE] ${new Date().toISOString()} | Image path generated: ${image_path}`);
+        }
       }
 
       const post = await postRepository.create({

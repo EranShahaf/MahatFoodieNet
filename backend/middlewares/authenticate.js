@@ -11,8 +11,12 @@ export const authenticate = (req, res, next) => {
   const token = header.split(" ")[1];
   try {
     const decoded = authService.verifyToken(token);
-    req.user = decoded;
-    console.log(`[AUTH MIDDLEWARE] ${new Date().toISOString()} | Authentication successful: ${decoded.username} - ${req.method} ${req.originalUrl}`);
+    // Normalize user object: JWT uses 'sub' for user ID, but we want 'id' for consistency
+    req.user = {
+      ...decoded,
+      id: decoded.sub || decoded.id
+    };
+    console.log(`[AUTH MIDDLEWARE] ${new Date().toISOString()} | Authentication successful: ${decoded.username} (id: ${req.user.id}) - ${req.method} ${req.originalUrl}`);
     next();
   } catch (error) {
     console.error(`[AUTH MIDDLEWARE] ${new Date().toISOString()} | Authentication failed: Invalid or expired token - ${req.method} ${req.originalUrl} | Error: ${error.message}`);

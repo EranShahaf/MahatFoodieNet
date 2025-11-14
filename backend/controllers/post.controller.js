@@ -124,7 +124,7 @@ export const postRouter = express.Router();
  */
 postRouter.post("/", authenticate, async (req, res) => {
   try {
-    console.log(`[CONTROLLER] ${new Date().toISOString()} | POST /api/posts - Creating post by user: ${req.user.username}`);
+    console.log(`[CONTROLLER] ${new Date().toISOString()} | POST /api/posts - Creating post by user: ${req.user.username} (id: ${req.user.id})`);
     const post = await postService.createPost({ ...req.body, user_id: req.user.id });
     console.log(`[CONTROLLER] ${new Date().toISOString()} | POST /api/posts - Post created successfully: id ${post.id}`);
     res.status(201).json(post);

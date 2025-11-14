@@ -69,6 +69,73 @@ services:
     environment:
       API_URL: http://backend:5000
 
+  init-full-flow:
+    build:
+      context: ./backend
+    command: >
+      bash -c "
+      echo '⏳ Waiting for backend...' &&
+      until curl -s http://backend:5000/api/hello > /dev/null; do sleep 2; done &&
+      echo '🚀 Backend is up, running full flow script...' &&
+      node scripts/initFullFlow.js
+      "
+    depends_on:
+      - backend
+    environment:
+      API_URL: http://backend:5000
+
+  test-unit:
+    build:
+      context: ./backend
+    command: >
+      bash -c "
+      echo '🧪 Running unit tests...' &&
+      npm test -- --testPathIgnorePatterns='e2e.test.js'
+      "
+    depends_on:
+      - backend
+    environment:
+      <<: [*db-env, *s3-env]
+      API_URL: http://backend:5000
+      JWT_SECRET: super_secret_foodienet
+      JWT_EXPIRE_IN: 1h
+
+  test-e2e:
+    build:
+      context: ./backend
+    command: >
+      bash -c "
+      echo '⏳ Waiting for backend...' &&
+      until curl -s http://backend:5000/api/hello > /dev/null; do sleep 2; done &&
+      echo '🧪 Running E2E tests...' &&
+      npm test -- e2e.test.js
+      "
+    depends_on:
+      - backend
+    environment:
+      <<: [*db-env, *s3-env]
+      API_URL: http://backend:5000
+      JWT_SECRET: super_secret_foodienet
+      JWT_EXPIRE_IN: 1h
+
+  test-all:
+    build:
+      context: ./backend
+    command: >
+      bash -c "
+      echo '⏳ Waiting for backend...' &&
+      until curl -s http://backend:5000/api/hello > /dev/null; do sleep 2; done &&
+      echo '🧪 Running all tests...' &&
+      npm test
+      "
+    depends_on:
+      - backend
+    environment:
+      <<: [*db-env, *s3-env]
+      API_URL: http://backend:5000
+      JWT_SECRET: super_secret_foodienet
+      JWT_EXPIRE_IN: 1h
+
   frontend:
     build:
       context: ./frontend
