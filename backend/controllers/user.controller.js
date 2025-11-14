@@ -48,9 +48,12 @@ export const userRouter = express.Router();
 userRouter.post("/", async (req, res) => {
   const { username, password, roles } = req.body;
   try {
+    console.log(`[CONTROLLER] ${new Date().toISOString()} | POST /api/users - Creating user: ${username}`);
     const user = await userService.createUser(username, password, roles);
+    console.log(`[CONTROLLER] ${new Date().toISOString()} | POST /api/users - User created successfully: ${username} (id: ${user.id})`);
     res.status(201).json(user); // user object now includes 'bucket' field
   } catch (err) {
+    console.error(`[CONTROLLER ERROR] ${new Date().toISOString()} | POST /api/users - Error: ${err.message}`);
     res.status(400).json({ message: err.message });
   }
 });
@@ -74,9 +77,16 @@ userRouter.post("/", async (req, res) => {
  *         description: User deleted
  */
 userRouter.delete("/:id", authenticate, authorize("admin"), async (req, res) => {
-  const { id } = req.params;
-  await userService.deleteUser(id);
-  res.json({ message: "User deleted" });
+  try {
+    const { id } = req.params;
+    console.log(`[CONTROLLER] ${new Date().toISOString()} | DELETE /api/users/${id} - Deleting user by admin: ${req.user.username}`);
+    await userService.deleteUser(id);
+    console.log(`[CONTROLLER] ${new Date().toISOString()} | DELETE /api/users/${id} - User deleted successfully`);
+    res.json({ message: "User deleted" });
+  } catch (error) {
+    console.error(`[CONTROLLER ERROR] ${new Date().toISOString()} | DELETE /api/users/${id} - Error: ${error.message}`);
+    res.status(500).json({ message: error.message || "Internal server error" });
+  }
 });
 
 /**
@@ -92,6 +102,13 @@ userRouter.delete("/:id", authenticate, authorize("admin"), async (req, res) => 
  *         description: List of users
  */
 userRouter.get("/", authenticate, authorize("user"), async (req, res) => {
-  const users = await userService.listUsers();
-  res.json(users);
+  try {
+    console.log(`[CONTROLLER] ${new Date().toISOString()} | GET /api/users - Listing users by: ${req.user.username}`);
+    const users = await userService.listUsers();
+    console.log(`[CONTROLLER] ${new Date().toISOString()} | GET /api/users - Retrieved ${users.length} users`);
+    res.json(users);
+  } catch (error) {
+    console.error(`[CONTROLLER ERROR] ${new Date().toISOString()} | GET /api/users - Error: ${error.message}`);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });

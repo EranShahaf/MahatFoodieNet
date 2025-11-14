@@ -114,7 +114,150 @@ MinIO hostname issues: use minio as host inside containers, localhost from host 
 
 Frontend fetch errors in dev: use React proxy or set REACT_APP_API_URL=http://localhost:5000 before building
 
-## 8. Useful Commands
+## 8. Command Scripts (.cmd files)
+
+The project includes several Windows batch scripts for common operations. Each script is documented with its purpose and usage:
+
+### Quick Reference
+
+| Script | Purpose | Data Loss? |
+|--------|---------|------------|
+| `init-users.cmd` | Initialize default users in database | No |
+| `backend_restart.cmd` | Restart backend with clean volumes | Yes (backend volumes) |
+| `backend_restart_for_code.cmd` | Quick backend restart (preserves data) | No |
+| `compose_restart.cmd` | Restart all services with clean volumes | Yes (all volumes) |
+| `start_compose.cmd` | Start all services with clean build | Yes (all volumes) |
+| `start_compose_prod.cmd` | Start in production mode | Yes (all volumes) |
+| `fronted_restart.cmd` | Restart frontend service | Yes (frontend volumes) |
+
+### Detailed Script Descriptions
+
+#### `init-users.cmd`
+**Purpose**: Initialize default users in the database
+
+**What it does**:
+- Runs the `init-users` Docker service
+- Creates default admin and user accounts in PostgreSQL
+- Shows logs to verify user creation
+
+**When to use**:
+- First time setup
+- After resetting the database
+- When you need to recreate default users
+
+**Data loss**: No - only creates new users
+
+---
+
+#### `backend_restart.cmd`
+**Purpose**: Restart the backend service with a clean slate
+
+**What it does**:
+1. Stops and removes the backend container and its volumes
+2. Rebuilds and starts the backend service
+
+**When to use**:
+- Clear backend data/volumes
+- Apply backend code changes that require a rebuild
+- Fix backend container issues
+
+**Data loss**: Yes - backend volumes are deleted
+
+---
+
+#### `backend_restart_for_code.cmd`
+**Purpose**: Quick restart of backend service to apply code changes
+
+**What it does**:
+1. Stops the backend container (preserves volumes)
+2. Starts the backend in detached mode
+3. Waits 5 seconds
+4. Shows backend logs to verify it started correctly
+
+**When to use**:
+- Made code changes and want to see them applied quickly
+- Need to restart backend without losing data
+- Want to quickly check backend logs after restart
+
+**Data loss**: No - volumes are preserved
+
+---
+
+#### `compose_restart.cmd`
+**Purpose**: Restart all Docker Compose services with volumes cleared
+
+**What it does**:
+1. Stops and removes all containers and volumes
+2. Starts all services fresh (backend, frontend, postgres, minio)
+
+**When to use**:
+- Start fresh with a clean database
+- Clear all application data
+- Reset the entire development environment
+
+**Data loss**: ⚠️ **Yes - ALL data will be deleted** (database, MinIO storage)
+
+---
+
+#### `start_compose.cmd`
+**Purpose**: Start all Docker Compose services with a clean build
+
+**What it does**:
+1. Stops and removes all containers and volumes
+2. Builds and starts all services
+3. ⚠️ **Note**: Last line stops services immediately (may be a bug)
+
+**When to use**:
+- Start the entire stack from scratch
+- Rebuild all Docker images
+- Reset everything to a clean state
+
+**Data loss**: ⚠️ **Yes - ALL data will be deleted**
+
+**⚠️ Warning**: This script has a bug - it stops services immediately after starting them. Consider removing the last line if you want services to stay running.
+
+---
+
+#### `start_compose_prod.cmd`
+**Purpose**: Start Docker Compose in production mode
+
+**What it does**:
+1. Stops and removes all containers and volumes
+2. Starts services using `docker-compose.yml` (production config)
+   - Explicitly excludes `docker-compose.override.yml` (dev settings)
+3. ⚠️ **Note**: Last line stops services immediately (may be a bug)
+
+**When to use**:
+- Run in production mode (no hot reload, baked images)
+- Test production-like environment locally
+- Deploy to a production-like setup
+
+**Data loss**: ⚠️ **Yes - ALL data will be deleted**
+
+**⚠️ Warning**: This script has a bug - it stops services immediately after starting them. Consider removing the last line if you want services to stay running.
+
+---
+
+#### `fronted_restart.cmd`
+**Purpose**: Restart the frontend service with a clean slate
+
+**Note**: Filename has a typo (`fronted` instead of `frontend`)
+
+**What it does**:
+1. Stops and removes the frontend container and its volumes
+2. Rebuilds and starts the frontend service
+
+**When to use**:
+- Clear frontend build cache
+- Apply frontend code changes that require a rebuild
+- Fix frontend container issues
+- Reset frontend to a clean state
+
+**Data loss**: Yes - frontend volumes are deleted
+
+---
+
+## 9. Useful Commands
 ```bash
 # Build and start all services
 docker-compose up --build

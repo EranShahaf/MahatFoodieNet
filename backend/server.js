@@ -33,6 +33,7 @@ app.use(express.json());
  *         description: Success
  */
 app.get("/api/hello", (req, res) => {
+  console.log(`[CONTROLLER] ${new Date().toISOString()} | GET /api/hello - Hello endpoint accessed`);
   res.json({ message: "Hello from backend 🚀" });
 });
 
@@ -69,7 +70,28 @@ app.use("/api/posts", postRouter);
 app.use("/api/comments", commentRouter);
 app.use("/api/likes", likeRouter);
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(`[ERROR] ${new Date().toISOString()} | ${req.method} ${req.originalUrl} | Error: ${err.message}`);
+  console.error(`[ERROR] Stack: ${err.stack}`);
+  res.status(err.status || 500).json({ 
+    message: err.message || "Internal server error",
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack })
+  });
+});
+
 app.listen(PORT, () => {
-  console.log(`✅ Backend running on port ${PORT}`);
-  console.log(`📘 Swagger UI: http://localhost:${PORT}/api-docs`);
+  console.log(`[INFO] ${new Date().toISOString()} | ✅ Backend running on port ${PORT}`);
+  console.log(`[INFO] ${new Date().toISOString()} | 📘 Swagger UI: http://localhost:${PORT}/api-docs`);
+});
+
+// Graceful shutdown
+process.on("SIGTERM", () => {
+  console.log(`[INFO] ${new Date().toISOString()} | SIGTERM received, shutting down gracefully...`);
+  process.exit(0);
+});
+
+process.on("SIGINT", () => {
+  console.log(`[INFO] ${new Date().toISOString()} | SIGINT received, shutting down gracefully...`);
+  process.exit(0);
 });
