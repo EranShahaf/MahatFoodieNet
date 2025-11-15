@@ -2,10 +2,24 @@ import axios from 'axios';
 import { Client } from 'minio';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Get images directory path relative to project root
+// In Docker container, we're in /app, so scripts/init_images is at /app/scripts/init_images
+const getImagesDir = () => {
+  // Try multiple possible locations
+  const possiblePaths = [
+    path.join(process.cwd(), 'scripts', 'init_images'),
+    path.join(process.cwd(), 'backend', 'scripts', 'init_images'),
+    '/app/scripts/init_images'
+  ];
+  
+  for (const dirPath of possiblePaths) {
+    if (fs.existsSync(dirPath)) {
+      return dirPath;
+    }
+  }
+  return path.join(process.cwd(), 'scripts', 'init_images');
+};
 
 // Configuration
 const API_URL = process.env.API_URL || 'http://localhost:5000';
@@ -54,7 +68,7 @@ function generateRandomPost() {
 // Upload random image to MinIO
 async function uploadRandomImageToMinIO(bucketName) {
   try {
-    const imagesDir = path.join(__dirname, '../scripts/init_images');
+    const imagesDir = getImagesDir();
     
     // Check if images directory exists
     if (!fs.existsSync(imagesDir)) {

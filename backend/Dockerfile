@@ -9,6 +9,12 @@ RUN npm install
 COPY . .
 CMD ["npm", "run", "dev"]
 
+# Test image (includes devDependencies for testing)
+FROM base AS test
+RUN npm install
+COPY . .
+CMD ["npm", "test"]
+
 # Prod image
 FROM base AS prod
 RUN npm install --production

@@ -51,13 +51,15 @@ describe('Auth Endpoints', () => {
       expect(response.body).toEqual({ message: 'Internal server error' });
     });
 
-    it('should require username and password', async () => {
+    it('should handle missing password', async () => {
+      authService.login.mockResolvedValue(null);
+
       const response = await request(app)
         .post('/api/login')
         .send({ username: 'testuser' })
-        .expect(200); // The endpoint doesn't validate, but service will fail
+        .expect(401);
 
-      // Service will be called but may fail
+      expect(response.body).toEqual({ message: 'Invalid credentials' });
       expect(authService.login).toHaveBeenCalled();
     });
   });

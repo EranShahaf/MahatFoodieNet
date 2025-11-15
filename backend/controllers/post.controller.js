@@ -174,8 +174,8 @@ postRouter.get("/", async (req, res) => {
  *         description: Post deleted
  */
 postRouter.delete("/:id", authenticate, async (req, res) => {
+  const { id } = req.params;
   try {
-    const { id } = req.params;
     console.log(`[CONTROLLER] ${new Date().toISOString()} | DELETE /api/posts/${id} - Deleting post by user: ${req.user.username}`);
     await postService.deletePost(id);
     console.log(`[CONTROLLER] ${new Date().toISOString()} | DELETE /api/posts/${id} - Post deleted successfully`);

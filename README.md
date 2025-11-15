@@ -122,21 +122,21 @@ The project includes several Windows batch scripts for common operations. Each s
 
 | Script | Purpose | Data Loss? |
 |--------|---------|------------|
-| `init-users.cmd` | Initialize default users in database | No |
-| `init-full-flow.cmd` | Run full flow test (user, post, like, comment) | No |
-| `test-unit.cmd` | Run unit and integration tests | No |
-| `test-e2e.cmd` | Run end-to-end tests | No |
-| `test-all.cmd` | Run all tests (unit + E2E) | No |
-| `backend_restart.cmd` | Restart backend with clean volumes | Yes (backend volumes) |
-| `backend_restart_for_code.cmd` | Quick backend restart (preserves data) | No |
-| `compose_restart.cmd` | Restart all services with clean volumes | Yes (all volumes) |
-| `start_compose.cmd` | Start all services with clean build | Yes (all volumes) |
-| `start_compose_prod.cmd` | Start in production mode | Yes (all volumes) |
-| `fronted_restart.cmd` | Restart frontend service | Yes (frontend volumes) |
+| `compose_scripts/init-users.cmd` | Initialize default users in database | No |
+| `compose_scripts/init-full-flow.cmd` | Run full flow test (user, post, like, comment) | No |
+| `compose_scripts/test-unit.cmd` | Run unit and integration tests | No |
+| `compose_scripts/test-e2e.cmd` | Run end-to-end tests | No |
+| `compose_scripts/test-all.cmd` | Run all tests (unit + E2E) | No |
+| `compose_scripts/backend_restart.cmd` | Restart backend with clean volumes | Yes (backend volumes) |
+| `compose_scripts/backend_restart_for_code.cmd` | Quick backend restart (preserves data) | No |
+| `compose_scripts/compose_restart.cmd` | Restart all services with clean volumes | Yes (all volumes) |
+| `compose_scripts/start_compose.cmd` | Start all services with clean build | Yes (all volumes) |
+| `compose_scripts/start_compose_prod.cmd` | Start in production mode | Yes (all volumes) |
+| `compose_scripts/fronted_restart.cmd` | Restart frontend service | Yes (frontend volumes) |
 
 ### Detailed Script Descriptions
 
-#### `init-users.cmd`
+#### `compose_scripts/init-users.cmd`
 **Purpose**: Initialize default users in the database
 
 **What it does**:
@@ -153,7 +153,7 @@ The project includes several Windows batch scripts for common operations. Each s
 
 ---
 
-#### `init-full-flow.cmd`
+#### `compose_scripts/init-full-flow.cmd`
 **Purpose**: Run the full flow test script
 
 **What it does**:
@@ -181,7 +181,7 @@ The project includes several Windows batch scripts for common operations. Each s
 
 ---
 
-#### `test-unit.cmd`
+#### `compose_scripts/test-unit.cmd`
 **Purpose**: Run unit and integration tests
 
 **What it does**:
@@ -208,7 +208,7 @@ The project includes several Windows batch scripts for common operations. Each s
 
 ---
 
-#### `test-e2e.cmd`
+#### `compose_scripts/test-e2e.cmd`
 **Purpose**: Run end-to-end tests
 
 **What it does**:
@@ -239,7 +239,7 @@ The project includes several Windows batch scripts for common operations. Each s
 
 ---
 
-#### `test-all.cmd`
+#### `compose_scripts/test-all.cmd`
 **Purpose**: Run all tests (unit + E2E)
 
 **What it does**:
@@ -262,7 +262,7 @@ The project includes several Windows batch scripts for common operations. Each s
 
 ---
 
-#### `backend_restart.cmd`
+#### `compose_scripts/backend_restart.cmd`
 **Purpose**: Restart the backend service with a clean slate
 
 **What it does**:
@@ -278,7 +278,7 @@ The project includes several Windows batch scripts for common operations. Each s
 
 ---
 
-#### `backend_restart_for_code.cmd`
+#### `compose_scripts/backend_restart_for_code.cmd`
 **Purpose**: Quick restart of backend service to apply code changes
 
 **What it does**:
@@ -296,7 +296,7 @@ The project includes several Windows batch scripts for common operations. Each s
 
 ---
 
-#### `compose_restart.cmd`
+#### `compose_scripts/compose_restart.cmd`
 **Purpose**: Restart all Docker Compose services with volumes cleared
 
 **What it does**:
@@ -312,7 +312,7 @@ The project includes several Windows batch scripts for common operations. Each s
 
 ---
 
-#### `start_compose.cmd`
+#### `compose_scripts/start_compose.cmd`
 **Purpose**: Start all Docker Compose services with a clean build
 
 **What it does**:
@@ -331,7 +331,7 @@ The project includes several Windows batch scripts for common operations. Each s
 
 ---
 
-#### `start_compose_prod.cmd`
+#### `compose_scripts/start_compose_prod.cmd`
 **Purpose**: Start Docker Compose in production mode
 
 **What it does**:
@@ -351,7 +351,7 @@ The project includes several Windows batch scripts for common operations. Each s
 
 ---
 
-#### `fronted_restart.cmd`
+#### `compose_scripts/fronted_restart.cmd`
 **Purpose**: Restart the frontend service with a clean slate
 
 **Note**: Filename has a typo (`fronted` instead of `frontend`)
@@ -386,13 +386,13 @@ Tests are located in `backend/__tests__/`:
 
 ```bash
 # Run unit tests
-test-unit.cmd
+compose_scripts\test-unit.cmd
 
 # Run E2E tests
-test-e2e.cmd
+compose_scripts\test-e2e.cmd
 
 # Run all tests
-test-all.cmd
+compose_scripts\test-all.cmd
 ```
 
 #### Using npm (Local Development)

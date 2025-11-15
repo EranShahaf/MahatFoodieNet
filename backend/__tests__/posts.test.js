@@ -1,16 +1,17 @@
 import request from 'supertest';
 import express from 'express';
-import { postRouter } from '../controllers/post.controller.js';
 import { postService } from '../services/post.service.js';
-import { authenticate } from '../middlewares/authenticate.js';
 
 jest.mock('../services/post.service.js');
-jest.mock('../middlewares/authenticate.js', () => {
-  return (req, res, next) => {
+jest.mock('../middlewares/authenticate.js', () => ({
+  authenticate: jest.fn((req, res, next) => {
     req.user = { id: 1, username: 'testuser', sub: 1, roles: ['user'] };
     next();
-  };
-});
+  })
+}));
+
+// Import router after mocks are set up
+import { postRouter } from '../controllers/post.controller.js';
 
 const app = express();
 app.use(express.json());

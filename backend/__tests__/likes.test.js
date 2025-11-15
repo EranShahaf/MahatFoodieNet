@@ -1,16 +1,17 @@
 import request from 'supertest';
 import express from 'express';
-import { likeRouter } from '../controllers/like.controller.js';
 import { likeService } from '../services/like.service.js';
-import { authenticate } from '../middlewares/authenticate.js';
 
 jest.mock('../services/like.service.js');
-jest.mock('../middlewares/authenticate.js', () => {
-  return (req, res, next) => {
+jest.mock('../middlewares/authenticate.js', () => ({
+  authenticate: jest.fn((req, res, next) => {
     req.user = { id: 1, username: 'testuser', sub: 1, roles: ['user'] };
     next();
-  };
-});
+  })
+}));
+
+// Import router after mocks are set up
+import { likeRouter } from '../controllers/like.controller.js';
 
 const app = express();
 app.use(express.json());
@@ -33,7 +34,14 @@ describe('Like Endpoints', () => {
         .get('/api/likes')
         .expect(200);
 
-      expect(response.body).toEqual(mockLikes);
+      // Dates are serialized to strings in JSON responses
+      expect(response.body).toHaveLength(2);
+      expect(response.body[0]).toMatchObject({
+        id: 1,
+        user_id: 1,
+        post_id: 1
+      });
+      expect(response.body[0].created_at).toBeDefined();
       expect(likeService.listLikes).toHaveBeenCalled();
     });
   });
