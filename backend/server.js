@@ -9,6 +9,7 @@ import { userRouter } from "./controllers/user.controller.js";
 import { postRouter } from "./controllers/post.controller.js";
 import { commentRouter } from "./controllers/comment.controller.js";
 import { likeRouter } from "./controllers/like.controller.js";
+import { searchRouter } from "./controllers/search.controller.js";
 import { auditMiddleware } from "./middlewares/audit.js";
 
 
@@ -69,6 +70,7 @@ app.use("/api/users", userRouter);
 app.use("/api/posts", postRouter);
 app.use("/api/comments", commentRouter);
 app.use("/api/likes", likeRouter);
+app.use("/api/search", searchRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

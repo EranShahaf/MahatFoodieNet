@@ -120,6 +120,18 @@ export const postService = {
     }
   },
 
+  async getPostsByLocation(location) {
+    try {
+      console.log(`[SERVICE] ${new Date().toISOString()} | Getting posts by location: ${location}`);
+      const posts = await postRepository.findByLocation(location);
+      console.log(`[SERVICE] ${new Date().toISOString()} | Retrieved ${posts.length} posts for location: ${location}`);
+      return posts;
+    } catch (error) {
+      console.error(`[SERVICE ERROR] ${new Date().toISOString()} | Failed to get posts by location: ${error.message}`);
+      throw error;
+    }
+  },
+
   async deletePost(id) {
     try {
       console.log(`[SERVICE] ${new Date().toISOString()} | Deleting post: ${id}`);

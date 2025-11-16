@@ -138,18 +138,33 @@ postRouter.post("/", authenticate, async (req, res) => {
  * @swagger
  * /api/posts:
  *   get:
- *     summary: List all posts
+ *     summary: List all posts or filter by location
  *     tags: [Posts]
+ *     parameters:
+ *       - in: query
+ *         name: location
+ *         schema:
+ *           type: string
+ *         description: Filter posts by location
  *     responses:
  *       200:
  *         description: List of posts
  */
 postRouter.get("/", async (req, res) => {
   try {
-    console.log(`[CONTROLLER] ${new Date().toISOString()} | GET /api/posts - Listing all posts`);
-    const posts = await postService.listPosts();
-    console.log(`[CONTROLLER] ${new Date().toISOString()} | GET /api/posts - Retrieved ${posts.length} posts`);
-    res.json(posts);
+    const { location } = req.query;
+    
+    if (location) {
+      console.log(`[CONTROLLER] ${new Date().toISOString()} | GET /api/posts?location=${location} - Getting posts by location`);
+      const posts = await postService.getPostsByLocation(location);
+      console.log(`[CONTROLLER] ${new Date().toISOString()} | GET /api/posts?location=${location} - Retrieved ${posts.length} posts`);
+      res.json(posts);
+    } else {
+      console.log(`[CONTROLLER] ${new Date().toISOString()} | GET /api/posts - Listing all posts`);
+      const posts = await postService.listPosts();
+      console.log(`[CONTROLLER] ${new Date().toISOString()} | GET /api/posts - Retrieved ${posts.length} posts`);
+      res.json(posts);
+    }
   } catch (error) {
     console.error(`[CONTROLLER ERROR] ${new Date().toISOString()} | GET /api/posts - Error: ${error.message}`);
     res.status(500).json({ message: "Internal server error" });

@@ -72,4 +72,27 @@ export class UserRepository {
       throw error;
     }
   }
+
+  async search(searchTerm) {
+    try {
+      const searchPattern = `%${searchTerm}%`;
+      const res = await pool.query(
+        `SELECT *, 
+         CASE 
+           WHEN LOWER(username) = LOWER($1) THEN 1
+           WHEN LOWER(username) LIKE LOWER($2) THEN 2
+           ELSE 3
+         END as relevance
+         FROM users 
+         WHERE LOWER(username) LIKE LOWER($2)
+         ORDER BY relevance ASC, username ASC
+         LIMIT 20`,
+        [searchTerm, searchPattern]
+      );
+      return res.rows.map(row => new User(row));
+    } catch (error) {
+      console.error(`[DB ERROR] ${new Date().toISOString()} | Failed to search users: ${error.message}`);
+      throw error;
+    }
+  }
 }

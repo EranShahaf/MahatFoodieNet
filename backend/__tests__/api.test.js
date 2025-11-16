@@ -5,11 +5,13 @@ import { userRouter } from '../controllers/user.controller.js';
 import { postRouter } from '../controllers/post.controller.js';
 import { commentRouter } from '../controllers/comment.controller.js';
 import { likeRouter } from '../controllers/like.controller.js';
+import { searchRouter } from '../controllers/search.controller.js';
 import { authService } from '../services/auth.service.js';
 import { userService } from '../services/user.service.js';
 import { postService } from '../services/post.service.js';
 import { commentService } from '../services/comment.service.js';
 import { likeService } from '../services/like.service.js';
+import { searchService } from '../services/search.service.js';
 
 // Mock services
 jest.mock('../services/auth.service.js');
@@ -17,6 +19,7 @@ jest.mock('../services/user.service.js');
 jest.mock('../services/post.service.js');
 jest.mock('../services/comment.service.js');
 jest.mock('../services/like.service.js');
+jest.mock('../services/search.service.js');
 
 const app = express();
 app.use(express.json());
@@ -28,6 +31,7 @@ app.use('/api/users', userRouter);
 app.use('/api/posts', postRouter);
 app.use('/api/comments', commentRouter);
 app.use('/api/likes', likeRouter);
+app.use('/api/search', searchRouter);
 
 describe('API Endpoints', () => {
   beforeEach(() => {
@@ -126,8 +130,8 @@ describe('API Endpoints', () => {
   describe('GET /api/posts', () => {
     it('should return list of posts', async () => {
       const mockPosts = [
-        { id: 1, title: 'Test Post', body: 'Test body', user_id: 1 },
-        { id: 2, title: 'Another Post', body: 'Another body', user_id: 2 }
+        { id: 1, title: 'Test Post', body: 'Test body', user_id: 1, tags: ['test'] },
+        { id: 2, title: 'Another Post', body: 'Another body', user_id: 2, tags: ['food'] }
       ];
       postService.listPosts.mockResolvedValue(mockPosts);
 
@@ -137,6 +141,20 @@ describe('API Endpoints', () => {
 
       expect(response.body).toEqual(mockPosts);
       expect(postService.listPosts).toHaveBeenCalled();
+    });
+
+    it('should filter posts by location when location query parameter is provided', async () => {
+      const mockPosts = [
+        { id: 1, title: 'NYC Post', body: 'Test body', user_id: 1, location: 'New York, NY', tags: ['pizza'] }
+      ];
+      postService.getPostsByLocation.mockResolvedValue(mockPosts);
+
+      const response = await request(app)
+        .get('/api/posts?location=New York, NY')
+        .expect(200);
+
+      expect(response.body).toEqual(mockPosts);
+      expect(postService.getPostsByLocation).toHaveBeenCalledWith('New York, NY');
     });
   });
 
@@ -217,6 +235,43 @@ describe('API Endpoints', () => {
 
       expect(response.body).toEqual(mockComments);
       expect(commentService.listComments).toHaveBeenCalled();
+    });
+  });
+
+  describe('GET /api/search', () => {
+    it('should return search results for tags, users, and posts', async () => {
+      const mockResults = {
+        tags: [{ id: 1, name: 'pizza' }],
+        users: [{ id: 1, username: 'pizzalover' }],
+        posts: [{ id: 1, title: 'Best Pizza', body: 'Great pizza', user_id: 1, tags: ['pizza'] }]
+      };
+      searchService.searchAll.mockResolvedValue(mockResults);
+
+      const response = await request(app)
+        .get('/api/search?q=pizza')
+        .expect(200);
+
+      expect(response.body).toEqual(mockResults);
+      expect(response.body).toHaveProperty('tags');
+      expect(response.body).toHaveProperty('users');
+      expect(response.body).toHaveProperty('posts');
+      expect(searchService.searchAll).toHaveBeenCalledWith('pizza');
+    });
+
+    it('should return 400 when search query is missing', async () => {
+      const response = await request(app)
+        .get('/api/search')
+        .expect(400);
+
+      expect(response.body).toEqual({ message: "Search query parameter 'q' is required" });
+    });
+
+    it('should return 400 when search query is empty', async () => {
+      const response = await request(app)
+        .get('/api/search?q=')
+        .expect(400);
+
+      expect(response.body).toEqual({ message: "Search query parameter 'q' is required" });
     });
   });
 });
