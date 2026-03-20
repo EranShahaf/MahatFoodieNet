@@ -1,8 +1,12 @@
 import request from 'supertest';
 import express from 'express';
 import { postService } from '../services/post.service.js';
+import { createPresignedUploadUrl } from '../services/minio.service.js';
 
 jest.mock('../services/post.service.js');
+jest.mock('../services/minio.service.js', () => ({
+  createPresignedUploadUrl: jest.fn()
+}));
 jest.mock('../middlewares/authenticate.js', () => ({
   authenticate: jest.fn((req, res, next) => {
     req.user = { id: 1, username: 'testuser', sub: 1, roles: ['user'] };
@@ -20,6 +24,40 @@ app.use('/api/posts', postRouter);
 describe('Post Endpoints', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('GET /api/posts/presigned-url', () => {
+    it('should generate a presigned URL', async () => {
+      createPresignedUploadUrl.mockResolvedValue('https://minio.mock/upload-url');
+
+      const response = await request(app)
+        .get('/api/posts/presigned-url?filename=test.jpg')
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        uploadUrl: 'https://minio.mock/upload-url',
+        objectName: expect.stringMatching(/^posts\/[a-f0-9\-]+-test\.jpg$/)
+      });
+      expect(createPresignedUploadUrl).toHaveBeenCalledWith('user-1', expect.stringMatching(/^posts\/[a-f0-9\-]+-test\.jpg$/));
+    });
+
+    it('should return 400 if filename is missing', async () => {
+      const response = await request(app)
+        .get('/api/posts/presigned-url')
+        .expect(400);
+
+      expect(response.body).toEqual({ message: 'Filename query parameter is required' });
+    });
+
+    it('should handle errors when generating URL', async () => {
+      createPresignedUploadUrl.mockRejectedValue(new Error('MinIO error'));
+
+      const response = await request(app)
+        .get('/api/posts/presigned-url?filename=test.jpg')
+        .expect(500);
+
+      expect(response.body).toEqual({ message: 'Internal server error' });
+    });
   });
 
   describe('GET /api/posts', () => {

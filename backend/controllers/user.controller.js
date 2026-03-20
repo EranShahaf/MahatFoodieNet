@@ -1,4 +1,3 @@
-// controllers/user.controller.js
 import express from "express";
 import { userService } from "../services/user.service.js";
 import { authenticate } from "../middlewares/authenticate.js";

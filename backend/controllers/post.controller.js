@@ -1,91 +1,7 @@
-// import express from "express";
-// import multer from "multer";
-// import { postService } from "../services/post.service.js";
-// import { authenticate } from "../middlewares/authenticate.js";
-
-// export const postRouter = express.Router();
-// const upload = multer({ storage: multer.memoryStorage() });
-
-// /**
-//  * @swagger
-//  * /api/posts:
-//  *   post:
-//  *     summary: Create a new post with optional image upload
-//  *     tags: [Posts]
-//  *     security:
-//  *       - bearerAuth: []
-//  *     requestBody:
-//  *       required: true
-//  *       content:
-//  *         multipart/form-data:
-//  *           schema:
-//  *             type: object
-//  *             properties:
-//  *               image:
-//  *                 type: string
-//  *                 format: binary
-//  *               title:
-//  *                 type: string
-//  *               body:
-//  *                 type: string
-//  *               tags:
-//  *                 type: array
-//  *                 items:
-//  *                   type: string
-//  *               rating:
-//  *                 type: number
-//  *               location:
-//  *                 type: string
-//  *             required:
-//  *               - title
-//  *               - body
-//  *     responses:
-//  *       201:
-//  *         description: Post created successfully
-//  */
-// postRouter.post("/", authenticate, upload.single("image"), async (req, res) => {
-//   try {
-//     const userId = req.user.id;
-//     const { title, body, tags, rating, location } = req.body;
-
-//     let imagePath = null;
-//     if (req.file) {
-//       // Delegate upload to service layer
-//       imagePath = await postService.uploadPostImage(userId, req.file);
-//     }
-
-//     const post = await postService.createPost({
-//       user_id: userId,
-//       title,
-//       body,
-//       tags,
-//       rating,
-//       location,
-//       image_path: imagePath,
-//     });
-
-//     res.status(201).json(post);
-//   } catch (err) {
-//     console.error("Error creating post:", err);
-//     res.status(400).json({ message: err.message });
-//   }
-// });
-
-// postRouter.get("/", async (req, res) => {
-//   const posts = await postService.listPosts();
-//   res.json(posts);
-// });
-
-// postRouter.delete("/:id", authenticate, async (req, res) => {
-//   const { id } = req.params;
-//   await postService.deletePost(id, req.user);
-//   res.json({ message: "Post deleted" });
-// });
-
-
-
 import express from "express";
+import crypto from "crypto";
 import { postService } from "../services/post.service.js";
+import { createPresignedUploadUrl } from "../services/minio.service.js";
 import { authenticate } from "../middlewares/authenticate.js";
 
 export const postRouter = express.Router();
@@ -96,6 +12,45 @@ export const postRouter = express.Router();
  *   - name: Posts
  *     description: Manage user posts
  */
+
+/**
+ * @swagger
+ * /api/posts/presigned-url:
+ *   get:
+ *     summary: Get a presigned URL for image upload
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: filename
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Original filename
+ *     responses:
+ *       200:
+ *         description: Presigned URL generated
+ */
+postRouter.get("/presigned-url", authenticate, async (req, res) => {
+  try {
+    const { filename } = req.query;
+    if (!filename) {
+      return res.status(400).json({ message: "Filename query parameter is required" });
+    }
+
+    const objectName = `posts/${crypto.randomUUID()}-${filename}`;
+    const bucketName = `user-${req.user.id}`;
+
+    console.log(`[CONTROLLER] ${new Date().toISOString()} | GET /api/posts/presigned-url - Generating URL for user: ${bucketName}`);
+    const uploadUrl = await createPresignedUploadUrl(bucketName, objectName);
+    
+    res.json({ uploadUrl, objectName });
+  } catch (error) {
+    console.error(`[CONTROLLER ERROR] ${new Date().toISOString()} | GET /api/posts/presigned-url - Error: ${error.message}`);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 /**
  * @swagger
@@ -153,7 +108,7 @@ postRouter.post("/", authenticate, async (req, res) => {
 postRouter.get("/", async (req, res) => {
   try {
     const { location } = req.query;
-    
+
     if (location) {
       console.log(`[CONTROLLER] ${new Date().toISOString()} | GET /api/posts?location=${location} - Getting posts by location`);
       const posts = await postService.getPostsByLocation(location);

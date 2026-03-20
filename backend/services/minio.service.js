@@ -1,4 +1,3 @@
-// services/minio.service.js
 import { Client } from "minio";
 
 const minioClient = new Client({
@@ -7,6 +6,16 @@ const minioClient = new Client({
   useSSL: process.env.MINIO_USE_SSL === "true" || false,
   accessKey: process.env.MINIO_ACCESS_KEY || "minioadmin",
   secretKey: process.env.MINIO_SECRET_KEY || "minioadmin123",
+  region: "us-east-1",
+});
+
+const publicMinioClient = new Client({
+  endPoint: process.env.MINIO_PUBLIC_ENDPOINT || "localhost",
+  port: parseInt(process.env.MINIO_PORT || "9000"),
+  useSSL: process.env.MINIO_USE_SSL === "true" || false,
+  accessKey: process.env.MINIO_ACCESS_KEY || "minioadmin",
+  secretKey: process.env.MINIO_SECRET_KEY || "minioadmin123",
+  region: "us-east-1",
 });
 
 /**
@@ -52,11 +61,12 @@ export const createPresignedUploadUrl = async (
 ) => {
   try {
     console.log(`[MINIO] ${new Date().toISOString()} | Creating presigned upload URL for bucket: ${bucketName}, object: ${objectName}, expiry: ${expirySeconds}s`);
-    const url = await minioClient.presignedPutObject(
+    const url = await publicMinioClient.presignedPutObject(
       bucketName,
       objectName,
       expirySeconds
     );
+    
     console.log(`[MINIO] ${new Date().toISOString()} | Presigned upload URL created successfully for: ${objectName}`);
     return url;
   } catch (error) {
@@ -74,7 +84,7 @@ export const createPresignedUploadUrl = async (
 export const getMinioFilePath = (bucketName, objectName) => {
   const useSSL = process.env.MINIO_USE_SSL === "true" || false;
   const protocol = useSSL ? "https" : "http";
-  const endpoint = process.env.MINIO_ENDPOINT || "localhost";
+  const endpoint = process.env.MINIO_PUBLIC_ENDPOINT || "localhost";
   const port = parseInt(process.env.MINIO_PORT || "9000");
   
   // Construct the public URL

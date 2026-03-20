@@ -143,11 +143,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:5000
     container_name: frontend
     ports:
       - "3000:80"
-    environment:
-      REACT_APP_API_URL: http://localhost:5000
     depends_on:
       - backend
 
