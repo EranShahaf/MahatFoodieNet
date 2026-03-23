@@ -20,7 +20,7 @@ interface CommentsSheetProps {
 }
 
 const CommentsSheet = ({ post, open, onOpenChange }: CommentsSheetProps) => {
-  const { addComment, getComments } = useFeed();
+  const { addComment, getComments, fetchComments } = useFeed();
   const { profile } = useProfile();
   const [text, setText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -28,10 +28,11 @@ const CommentsSheet = ({ post, open, onOpenChange }: CommentsSheetProps) => {
   const comments = post ? getComments(post.id) : [];
 
   useEffect(() => {
-    if (open) {
+    if (open && post) {
+      fetchComments(post.id);
       setTimeout(() => inputRef.current?.focus(), 300);
     }
-  }, [open]);
+  }, [open, post, fetchComments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

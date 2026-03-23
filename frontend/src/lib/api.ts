@@ -68,6 +68,18 @@ export const api = {
     return fetchJson(url, { headers: getHeaders() });
   },
 
+  async getPost(id: string) {
+    return fetchJson(`${API_URL}/api/posts/${id}`, { headers: getHeaders() });
+  },
+
+  async getPostComments(postId: string) {
+    return fetchJson(`${API_URL}/api/posts/${postId}/comments`, { headers: getHeaders() });
+  },
+
+  async getPostLikes(postId: string) {
+    return fetchJson(`${API_URL}/api/posts/${postId}/likes`, { headers: getHeaders() });
+  },
+
   async getPresignedUrl(filename: string) {
     return fetchJson(`${API_URL}/api/posts/presigned-url?filename=${encodeURIComponent(filename)}`, { 
       headers: getHeaders() 

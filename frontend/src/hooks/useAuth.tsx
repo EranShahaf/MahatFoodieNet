@@ -91,8 +91,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [login]);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(SESSION_KEY);
+    localStorage.clear();
     setSession(null);
+    window.location.reload();
   }, []);
 
   return (

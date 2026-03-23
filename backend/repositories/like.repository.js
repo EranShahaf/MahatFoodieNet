@@ -31,6 +31,26 @@ export class LikeRepository {
     }
   }
 
+  async findByPostId(post_id) {
+    try {
+      const res = await pool.query(`
+        SELECT l.*, u.username
+        FROM likes l
+        LEFT JOIN users u ON l.user_id = u.id
+        WHERE l.post_id = $1
+      `, [post_id]);
+      console.log(`[DB] ${new Date().toISOString()} | Found ${res.rows.length} likes for post ${post_id}`);
+      return res.rows.map(row => {
+        const like = new Like(row);
+        like.username = row.username;
+        return like;
+      });
+    } catch (error) {
+      console.error(`[DB ERROR] ${new Date().toISOString()} | Failed to find likes for post ${post_id}: ${error.message}`);
+      throw error;
+    }
+  }
+
   async delete(user_id, post_id) {
     try {
       console.log(`[DB] ${new Date().toISOString()} | Deleting like by user ${user_id} on post ${post_id}`);

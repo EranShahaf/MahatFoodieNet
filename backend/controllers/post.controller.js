@@ -129,6 +129,83 @@ postRouter.get("/", async (req, res) => {
 /**
  * @swagger
  * /api/posts/{id}:
+ *   get:
+ *     summary: Get a post by id
+ *     tags: [Posts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Post found
+ */
+postRouter.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`[CONTROLLER] ${new Date().toISOString()} | GET /api/posts/${id} - Getting post detail`);
+    const post = await postService.getPostById(id);
+    res.json(post);
+  } catch (error) {
+    console.error(`[CONTROLLER ERROR] ${new Date().toISOString()} | GET /api/posts/${req.params.id} - Error: ${error.message}`);
+    res.status(404).json({ message: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /api/posts/{id}/comments:
+ *   get:
+ *     summary: Get comments for a post
+ *     tags: [Posts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: List of comments
+ */
+postRouter.get("/:id/comments", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const comments = await (new (await import("../repositories/comment.repository.js")).CommentRepository()).findByPostId(id);
+    res.json(comments);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /api/posts/{id}/likes:
+ *   get:
+ *     summary: Get likes for a post
+ *     tags: [Posts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: List of likes
+ */
+postRouter.get("/:id/likes", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const likes = await (new (await import("../repositories/like.repository.js")).LikeRepository()).findByPostId(id);
+    res.json(likes);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /api/posts/{id}:
  *   delete:
  *     summary: Delete a post
  *     tags: [Posts]

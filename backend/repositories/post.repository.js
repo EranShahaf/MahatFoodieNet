@@ -63,7 +63,9 @@ export class PostRepository {
   async findAll() {
     try {
       const res = await pool.query(`
-        SELECT p.*, u.username
+        SELECT p.*, u.username,
+          (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) as likes_count,
+          (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comments_count
         FROM posts p
         LEFT JOIN users u ON p.user_id = u.id
         ORDER BY p.created_at DESC
@@ -95,7 +97,9 @@ export class PostRepository {
     try {
       console.log(`[DB] ${new Date().toISOString()} | Finding posts by location: ${location}`);
       const res = await pool.query(`
-        SELECT p.*, u.username
+        SELECT p.*, u.username,
+          (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) as likes_count,
+          (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comments_count
         FROM posts p
         LEFT JOIN users u ON p.user_id = u.id
         WHERE p.location = $1
@@ -124,18 +128,52 @@ export class PostRepository {
     }
   }
 
+  async findById(id) {
+    try {
+      console.log(`[DB] ${new Date().toISOString()} | Finding post by id: ${id}`);
+      const res = await pool.query(`
+        SELECT p.*, u.username,
+          (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) as likes_count,
+          (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comments_count
+        FROM posts p
+        LEFT JOIN users u ON p.user_id = u.id
+        WHERE p.id = $1
+      `, [id]);
+      
+      if (res.rows.length === 0) return null;
+      
+      const row = res.rows[0];
+      const post = new Post(row);
+      post.username = row.username;
+      
+      try {
+        const tags = await tagRepository.getTagsForPost(post.id);
+        post.tags = tags.map(t => t.name);
+      } catch (tagError) {
+        console.warn(`[DB WARNING] ${new Date().toISOString()} | Could not load tags for post ${post.id}: ${tagError.message}`);
+        post.tags = [];
+      }
+      return post;
+    } catch (error) {
+      console.error(`[DB ERROR] ${new Date().toISOString()} | Failed to find post by id: ${error.message}`);
+      throw error;
+    }
+  }
+
   async search(searchTerm) {
     try {
       const searchPattern = `%${searchTerm}%`;
       const res = await pool.query(`
         SELECT p.*, u.username,
-         CASE 
-           WHEN LOWER(p.title) = LOWER($1) THEN 1
-           WHEN LOWER(p.title) LIKE LOWER($2) THEN 2
-           WHEN LOWER(p.body) LIKE LOWER($2) THEN 3
-           WHEN LOWER(p.location) LIKE LOWER($2) THEN 4
-           ELSE 5
-         END as relevance
+          (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) as likes_count,
+          (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comments_count,
+          CASE 
+            WHEN LOWER(p.title) = LOWER($1) THEN 1
+            WHEN LOWER(p.title) LIKE LOWER($2) THEN 2
+            WHEN LOWER(p.body) LIKE LOWER($2) THEN 3
+            WHEN LOWER(p.location) LIKE LOWER($2) THEN 4
+            ELSE 5
+          END as relevance
         FROM posts p
         LEFT JOIN users u ON p.user_id = u.id
         WHERE LOWER(p.title) LIKE LOWER($2)

@@ -71,6 +71,26 @@ export const postService = {
       throw error;
     }
   },
+  
+  async getPostById(id) {
+    try {
+      console.log(`[SERVICE] ${new Date().toISOString()} | Getting post by id: ${id}`);
+      const post = await postRepository.findById(id);
+      if (!post) throw new Error("Post not found");
+      
+      const likes = await (new (await import("../repositories/like.repository.js")).LikeRepository()).findByPostId(id);
+      const comments = await (new (await import("../repositories/comment.repository.js")).CommentRepository()).findByPostId(id);
+      
+      return {
+        ...post,
+        likes_details: likes,
+        comments_details: comments
+      };
+    } catch (error) {
+      console.error(`[SERVICE ERROR] ${new Date().toISOString()} | Failed to get post by id ${id}: ${error.message}`);
+      throw error;
+    }
+  },
 
   async deletePost(id) {
     try {

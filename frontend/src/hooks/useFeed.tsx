@@ -29,6 +29,7 @@ interface FeedContextValue {
   isLiked: (postId: string) => boolean;
   addComment: (postId: string, text: string) => Promise<void>;
   getComments: (postId: string) => Comment[];
+  fetchComments: (postId: string) => Promise<void>;
 }
 
 const FeedContext = createContext<FeedContextValue | null>(null);
@@ -163,10 +164,26 @@ export function FeedProvider({ children }: { children: ReactNode }) {
 
   const fetchComments = useCallback(async (postId: string) => {
     try {
-      // Assuming a get comment by post ID endpoint exists, but if not we skip fetching
-      // Wait, backend has general getComments... let's just use local state for comments
-      // temporarily if fetching specific post comments isn't implemented cleanly.
-    } catch (e) {}
+      const data = await api.getPostComments(postId);
+      const mapped: Comment[] = data.map((c: any) => ({
+        id: c.id.toString(),
+        postId: c.post_id.toString(),
+        user: {
+          name: c.username || "User",
+          handle: c.username ? `@${c.username}` : "@user",
+          avatar: c.username ? c.username.substring(0, 2).toUpperCase() : "U",
+        },
+        text: c.message,
+        createdAt: new Date(c.created_at || Date.now()),
+      }));
+      setCommentsMap(prev => {
+        const next = new Map(prev);
+        next.set(postId, mapped);
+        return next;
+      });
+    } catch (e) {
+      console.error("Failed to fetch comments", e);
+    }
   }, []);
 
   const addComment = useCallback(async (postId: string, text: string) => {
@@ -204,7 +221,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
 
   return (
     <FeedContext.Provider
-      value={{ posts, loading, refreshPosts, addPost, toggleLike, isLiked, addComment, getComments }}
+      value={{ posts, loading, refreshPosts, addPost, toggleLike, isLiked, addComment, getComments, fetchComments }}
     >
       {children}
     </FeedContext.Provider>

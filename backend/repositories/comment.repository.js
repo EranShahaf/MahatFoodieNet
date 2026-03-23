@@ -31,6 +31,27 @@ export class CommentRepository {
     }
   }
 
+  async findByPostId(post_id) {
+    try {
+      const res = await pool.query(`
+        SELECT c.*, u.username
+        FROM comments c
+        LEFT JOIN users u ON c.user_id = u.id
+        WHERE c.post_id = $1
+        ORDER BY c.created_at ASC
+      `, [post_id]);
+      console.log(`[DB] ${new Date().toISOString()} | Found ${res.rows.length} comments for post ${post_id}`);
+      return res.rows.map(row => {
+        const comment = new Comment(row);
+        comment.username = row.username;
+        return comment;
+      });
+    } catch (error) {
+      console.error(`[DB ERROR] ${new Date().toISOString()} | Failed to find comments for post ${post_id}: ${error.message}`);
+      throw error;
+    }
+  }
+
   async delete(user_id, post_id) {
     try {
       console.log(`[DB] ${new Date().toISOString()} | Deleting comment by user ${user_id} on post ${post_id}`);
